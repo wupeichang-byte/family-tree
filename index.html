@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>吳家家族稱謂查詢</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft JhengHei','PingFang TC',sans-serif;background:#f0f4f8;min-height:100vh}
+header{background:linear-gradient(135deg,#2c3e50,#3498db);color:#fff;text-align:center;padding:16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+header h1{font-size:20px;margin-bottom:3px}
+#inst{font-size:12px;opacity:.9}
+#rbar{background:#fff3cd;color:#856404;padding:10px 16px;text-align:center;font-size:15px;font-weight:bold;display:none;border-bottom:2px solid #ffc107;position:sticky;top:55px;z-index:99}
+#rbar .zh{font-size:28px;color:#d63384}
+#rbar .en{font-size:14px;color:#6c757d;font-weight:normal}
+#wrap{overflow:auto;padding:20px 10px 50px}
+#tree{position:relative;margin:0 auto}
+svg#L{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
+svg#L path{fill:none;stroke:#bbb;stroke-width:1.5}
+svg#L line{stroke:#e74c3c;stroke-width:1.5;stroke-dasharray:5,3}
+.row{display:flex;justify-content:center;align-items:flex-start;gap:10px;position:relative;z-index:2;margin-bottom:10px}
+.row.r0{margin-bottom:30px}
+.branch{display:flex;flex-direction:column;align-items:center;border:1px solid #dee2e6;border-radius:10px;padding:8px 6px;background:#fff;gap:4px}
+.cp{display:flex;gap:4px;align-items:flex-start}
+.subfams{display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+.subfam{display:flex;flex-direction:column;align-items:center;gap:3px;border:1px solid #e0e0e0;border-radius:8px;padding:5px 4px;background:#fafbfc}
+.kids{display:flex;flex-direction:column;align-items:center;gap:2px}
+.p{width:58px;text-align:center;cursor:pointer;transition:transform .1s;position:relative;z-index:2}
+.p:hover{transform:scale(1.08)}
+.p.sa .a{box-shadow:0 0 0 3px #0d6efd,0 0 10px rgba(13,110,253,.4)}
+.p.sb .a{box-shadow:0 0 0 3px #dc3545,0 0 10px rgba(220,53,69,.4)}
+.a{width:42px;height:42px;border-radius:50%;margin:0 auto 2px;display:flex;align-items:center;justify-content:center;font-size:16px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.12);transition:box-shadow .1s}
+.a.m{background:linear-gradient(135deg,#74b9ff,#0984e3)}
+.a.f{background:linear-gradient(135deg,#fd79a8,#e84393)}
+.p.dead .a{opacity:.4;filter:grayscale(1)}
+.p.dead .n{color:#aaa}
+.p.dead::after{content:'✝';position:absolute;top:-2px;right:2px;font-size:10px;color:#999}
+.n{font-size:10px;font-weight:600;color:#2d3436;line-height:1.2;white-space:nowrap}
+.en{font-size:8px;color:#6c757d;line-height:1;white-space:nowrap}
+.g3 .a{width:34px;height:34px;font-size:13px}
+.g3 .n{font-size:9px}
+.g3{width:48px}
+.badge{display:inline-block;padding:0 4px;border-radius:6px;font-size:8px;font-weight:bold;color:#fff;margin-top:1px}
+.ba{background:#0d6efd}.bb{background:#dc3545}
+#btn{position:fixed;bottom:14px;right:14px;background:#6c757d;color:#fff;border:none;padding:7px 16px;border-radius:18px;cursor:pointer;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.2);display:none;z-index:200}
+footer{text-align:center;padding:12px;color:#aaa;font-size:10px}
+</style>
+</head>
+<body>
+<header>
+<h1>吳家四代家族關係圖 — 稱謂查詢</h1>
+<div id="inst">點選 A 再點選 B → 顯示 A 叫 B 什麼（中英對照）</div>
+</header>
+<div id="rbar"></div>
+<div id="wrap"><div id="tree"><svg id="L"></svg><div id="g0" class="row r0"></div><div id="g12" class="row"></div></div></div>
+<button id="btn" onclick="reset()">清除</button>
+<footer>吳家四代家族稱謂查詢系統</footer>
+<script>
+const D=[
+{id:'gf',n:'吳木林',g:'M',gen:0,d:1},{id:'gm',n:'吳賴媛',g:'F',gen:0,d:1},
+{id:'fa',n:'吳仁杰',g:'M',gen:1,d:1},{id:'mo',n:'魏麗真',g:'F',gen:1},
+{id:'dagu',n:'吳麗雲',g:'F',gen:1,d:1},{id:'daguh',n:'彭斗銘',g:'M',gen:1},
+{id:'ersh',n:'吳仁瑞',g:'M',gen:1},{id:'ershw',n:'林如芳',g:'F',gen:1},
+{id:'sansh',n:'吳仁嘉',g:'M',gen:1},{id:'sanshw',n:'王桂皇',g:'F',gen:1},
+{id:'xgu',n:'吳麗明',g:'F',gen:1,d:1},{id:'xguh',n:'李錫銘',g:'M',gen:1,d:1},
+{id:'xsh',n:'吳仁和',g:'M',gen:1},{id:'xshw',n:'曾曼麗',g:'F',gen:1},
+{id:'ego',n:'吳培彰',e:'Marc',g:'M',gen:2},{id:'csh',n:'陳思樺',e:'Chloe',g:'F',gen:2},
+{id:'wyx2',n:'吳怡萱',e:'Kama',g:'F',gen:2},
+{id:'psw',n:'彭松文',e:'Kevin',g:'M',gen:2},{id:'psww',n:'松文嫂',g:'F',gen:2},
+{id:'psk',n:'彭松崑',g:'M',gen:2},{id:'pskw',n:'松崑嫂',g:'F',gen:2},
+{id:'wzc',n:'吳正淳',e:'George',g:'M',gen:2},{id:'wxw',n:'吳曉葳',g:'F',gen:2},
+{id:'wyx',n:'吳怡欣',e:'Elsa',g:'F',gen:2},{id:'jay',n:'Jay',g:'M',gen:2},
+{id:'wyw',n:'吳怡玟',e:'Elva',g:'F',gen:2},{id:'michael',n:'Anthony',g:'M',gen:2},
+{id:'wyh',n:'吳怡虹',e:'Eve',g:'F',gen:2},{id:'nick',n:'Peter',g:'M',gen:2},
+{id:'wyj',n:'吳怡潔',e:'Lisa',g:'F',gen:2},{id:'antoine',n:'Antoine',g:'M',gen:2},
+{id:'wzg',n:'吳宗剛',e:'Tim',g:'M',gen:2},{id:'winnie',n:'Winnie',g:'F',gen:2},
+{id:'lya',n:'李曜安',e:'Jethero',g:'M',gen:2},{id:'polly',n:'Polly',g:'F',gen:2},
+{id:'ljy',n:'李健毓',e:'Billy',g:'M',gen:2},
+{id:'wyq',n:'吳怡奇',e:'Whithney',g:'F',gen:2},
+{id:'wzh',n:'吳正皓',g:'M',gen:2},{id:'lmd',n:'劉曼蒂',g:'F',gen:2},
+{id:'wjy',n:'吳健宇',e:'Tiger',g:'M',gen:3},{id:'cpy',n:'陳品諺',e:'Leo',g:'M',gen:3},
+{id:'pk1',n:'彭大寶',g:'M',gen:3},{id:'pk2',n:'彭二寶',g:'M',gen:3},
+{id:'wmz',n:'吳明哲',e:'Roger',g:'M',gen:3},{id:'wmy',n:'吳明佑',g:'M',gen:3},{id:'wts',n:'吳亭萱',g:'F',gen:3},
+{id:'cc',n:'CC',g:'M',gen:3},{id:'mila',n:'Mila',g:'F',gen:3},
+{id:'bd',n:'小便當',g:'F',gen:3},{id:'le',n:'小滷蛋',g:'M',gen:3},
+{id:'ali',n:'Ali',g:'F',gen:3},
+{id:'sz',n:'薯仔',g:'M',gen:3},{id:'mochi',n:'麻糬',g:'M',gen:3},
+{id:'mnt',n:'迷你兔',g:'F',gen:3},
+];
+const SP=[['gf','gm'],['fa','mo'],['dagu','daguh'],['ersh','ershw'],['sansh','sanshw'],['xgu','xguh'],['xsh','xshw'],
+ ['ego','csh'],['psw','psww'],['psk','pskw'],['wzc','wxw'],['wyx','jay'],['wyw','michael'],['wyh','nick'],
+ ['wyj','antoine'],['wzg','winnie'],['lya','polly'],['wzh','lmd']];
+const PC=[
+ ['gf','fa'],['gm','fa'],['gf','dagu'],['gm','dagu'],['gf','ersh'],['gm','ersh'],
+ ['gf','sansh'],['gm','sansh'],['gf','xgu'],['gm','xgu'],['gf','xsh'],['gm','xsh'],
+ ['fa','ego'],['mo','ego'],['fa','wyx2'],['mo','wyx2'],
+ ['dagu','psw'],['daguh','psw'],['dagu','psk'],['daguh','psk'],
+ ['ersh','wzc'],['ershw','wzc'],['ersh','wyx'],['ershw','wyx'],['ersh','wyw'],['ershw','wyw'],['ersh','wyh'],['ershw','wyh'],
+ ['sansh','wyj'],['sanshw','wyj'],['sansh','wzg'],['sanshw','wzg'],
+ ['xgu','lya'],['xguh','lya'],['xgu','ljy'],['xguh','ljy'],
+ ['xsh','wyq'],['xshw','wyq'],['xsh','wzh'],['xshw','wzh'],
+ ['ego','wjy'],['csh','wjy'],['ego','cpy'],['csh','cpy'],
+ ['psk','pk1'],['pskw','pk1'],['psk','pk2'],['pskw','pk2'],
+ ['wzc','wmz'],['wxw','wmz'],['wzc','wmy'],['wxw','wmy'],['wzc','wts'],['wxw','wts'],
+ ['wyx','cc'],['jay','cc'],['wyw','mila'],['michael','mila'],
+ ['wyh','bd'],['nick','bd'],['wyh','le'],['nick','le'],
+ ['wyj','ali'],['antoine','ali'],
+ ['wzg','sz'],['winnie','sz'],['wzg','mochi'],['winnie','mochi'],
+ ['wzh','mnt'],['lmd','mnt'],
+];
+const SIB={fa:1,dagu:2,ersh:3,sansh:4,xgu:5,xsh:6};
+const AGE={ego:1,wyx2:2,psw:3,psk:4,wzc:5,wyx:6,wyw:7,wyh:8,wyj:9,wzg:10,lya:11,ljy:12,wyq:13,wzh:14,
+ csh:1,psww:3,pskw:4,wxw:5,jay:6,michael:7,nick:8,antoine:9,winnie:10,polly:11,lmd:14};
+
+const adj={},mm={};
+D.forEach(m=>{adj[m.id]=[];mm[m.id]=m});
+PC.forEach(([p,c])=>{adj[p].push({to:c,t:'c'});adj[c].push({to:p,t:'p'})});
+SP.forEach(([a,b])=>{adj[a].push({to:b,t:'s'});adj[b].push({to:a,t:'s'})});
+
+function bfs(a,b){
+ if(a===b)return[];
+ const q=[[a,[]]],v=new Set([a]);
+ while(q.length){const[c,p]=q.shift();for(const e of adj[c]){if(v.has(e.to))continue;const np=[...p,{f:c,to:e.to,t:e.t}];if(e.to===b)return np;v.add(e.to);q.push([e.to,np])}}
+ return null;
+}
+function ch(p){return p.map(s=>(s.t==='p'?'P':s.t==='c'?'C':'S')+mm[s.to].g).join('')}
+function el(a,b){return(AGE[a]??SIB[a]??99)<(AGE[b]??SIB[b]??99)}
+function T(z,e){return{zh:z,en:e}}
+
+function kin(a,b,noSp){
+ if(a===b)return T('自己','Self');
+ const p=bfs(a,b);if(!p)return T('無關係','No relation');
+ const c=ch(p),to=mm[b],fr=mm[a];
+ const S={PM:['爸爸','Father'],PF:['媽媽','Mother'],CM:['兒子','Son'],CF:['女兒','Daughter'],
+  SM:['老公','Husband'],SF:['老婆','Wife'],
+  PMPM:['爺爺','Paternal Grandfather'],PMPF:['奶奶','Paternal Grandmother'],
+  PFPM:['外公','Maternal Grandfather'],PFPF:['外婆','Maternal Grandmother'],
+  CMCM:['孫子','Grandson'],CMCF:['孫女','Granddaughter'],CFCM:['外孫','Grandson(D)'],CFCF:['外孫女','Granddaughter(D)'],
+  CMSF:['媳婦','Daughter-in-law'],CFSM:['女婿','Son-in-law'],
+  SMPM:['公公','Father-in-law'],SMPF:['婆婆','Mother-in-law'],SFPM:['岳父','Father-in-law'],SFPF:['岳母','Mother-in-law'],
+  PMPMPM:['曾祖父','Great-Grandfather'],PMPMPF:['曾祖母','Great-Grandmother'],
+  PMPFPM:['外曾祖父','Great-Grandfather(M)'],PMPFPF:['外曾祖母','Great-Grandmother(M)'],
+  CMCMCM:['曾孫','Great-Grandson'],CMCMCF:['曾孫女','Great-Granddaughter'],
+  CMCFCM:['外曾孫','Great-Grandson(D)'],CMCFCF:['外曾孫女','Great-Granddaughter(D)'],
+  CFCMCM:['外曾孫','Great-Grandson(D)'],CFCMCF:['外曾孫女','Great-Granddaughter(D)'],
+  CFCFCM:['外曾孫','Great-Grandson(D)'],CFCFCF:['外曾孫女','Great-Granddaughter(D)'],
+ };
+ if(S[c])return T(S[c][0],S[c][1]);
+
+ // siblings
+ if(/^P[MF]C[MF]$/.test(c)){
+  return to.g==='M'?(el(b,a)?T('哥哥','Elder Brother'):T('弟弟','Younger Brother')):(el(b,a)?T('姐姐','Elder Sister'):T('妹妹','Younger Sister'));
+ }
+ // uncle/aunt (parent's sibling)
+ if(/^P[MF]P[MF]C[MF]$/.test(c)){
+  const pat=c[1]==='M';
+  if(pat){if(to.g==='M')return el(b,p[0].to)?T('伯父','Uncle(Elder)'):T('叔叔','Uncle(Younger)');return T('姑姑','Paternal Aunt');}
+  return to.g==='M'?T('舅舅','Maternal Uncle'):T('阿姨','Maternal Aunt');
+ }
+ // uncle/aunt's spouse
+ if(/^P[MF]P[MF]C[MF]S[MF]$/.test(c)){
+  const pat=c[1]==='M',sib=mm[p[2].to];
+  if(pat){if(sib.g==='M')return el(sib.id,p[0].to)?T('伯母','Uncle\'s Wife(E)'):T('嬸嬸','Uncle\'s Wife(Y)');return T('姑丈','Aunt\'s Husband');}
+  return sib.g==='M'?T('舅媽','Uncle\'s Wife(M)'):T('姨丈','Aunt\'s Husband(M)');
+ }
+ // cousins
+ if(/^P[MF]P[MF]C[MF]C[MF]$/.test(c)){
+  const pat=c[1]==='M',mid=mm[p[2].to],tang=pat&&mid.g==='M',e=el(b,a),pf=tang?'堂':'表';
+  return to.g==='M'?(e?T(pf+'哥',pf+' Cousin(M,E)'):T(pf+'弟',pf+' Cousin(M,Y)')):(e?T(pf+'姐',pf+' Cousin(F,E)'):T(pf+'妹',pf+' Cousin(F,Y)'));
+ }
+ // nephew/niece (sibling's child)
+ if(/^P[MF]C[MF]C[MF]$/.test(c)){
+  const sib=mm[p[1].to];
+  if(sib.g==='M')return to.g==='M'?T('侄子','Nephew(B)'):T('侄女','Niece(B)');
+  return to.g==='M'?T('外甥','Nephew(S)'):T('外甥女','Niece(S)');
+ }
+ // sibling's spouse
+ if(/^P[MF]C[MF]S[MF]$/.test(c)){
+  const sib=mm[p[1].to],e=el(sib.id,a);
+  if(sib.g==='M')return e?T('嫂嫂','Elder Bro\'s Wife'):T('弟媳','Younger Bro\'s Wife');
+  return e?T('姐夫','Elder Sis\'s Husband'):T('妹夫','Younger Sis\'s Husband');
+ }
+ // spouse's sibling
+ if(/^S[MF]P[MF]C[MF]$/.test(c)){
+  const sp=mm[p[0].to];
+  if(sp.g==='M'){return to.g==='M'?(el(b,sp.id)?T('大伯','H\'s Elder Bro'):T('小叔','H\'s Younger Bro')):T('大姑/小姑','H\'s Sister');}
+  return to.g==='M'?T('舅子','W\'s Brother'):(el(b,sp.id)?T('大姨子','W\'s Elder Sis'):T('小姨子','W\'s Younger Sis'));
+ }
+
+ // === Gen3 ↔ Gen1: 叔公/伯公/姑婆 ===
+ if(/^P[MF]P[MF]P[MF]C[MF]$/.test(c)){
+  const anc=p[1].to;
+  if(to.g==='M')return el(b,anc)?T('伯公','Grand-Uncle(E)'):T('叔公','Grand-Uncle(Y)');
+  return T('姑婆','Grand-Aunt');
+ }
+ // Gen3→Gen1 spouse: 嬸婆/伯婆/姑丈公
+ if(/^P[MF]P[MF]P[MF]C[MF]S[MF]$/.test(c)){
+  const sib=mm[p[3].to],anc=p[1].to;
+  if(sib.g==='M')return el(sib.id,anc)?T('伯婆','Grand-Uncle\'s Wife(E)'):T('嬸婆','Grand-Uncle\'s Wife(Y)');
+  return T('姑丈公','Grand-Aunt\'s Husband');
+ }
+ // Gen1→Gen3 non-direct: 侄孫
+ if(/^P[MF]C[MF]C[MF]C[MF]$/.test(c)){
+  const sib=mm[p[1].to];
+  if(sib.g==='M')return to.g==='M'?T('侄孫','Grand-Nephew(B)'):T('侄孫女','Grand-Niece(B)');
+  return to.g==='M'?T('外甥孫','Grand-Nephew(S)'):T('外甥孫女','Grand-Niece(S)');
+ }
+
+ // === Gen3 ↔ Gen2 cross-branch: 堂伯/堂叔/表叔 ===
+ if(/^P[MF]P[MF]P[MF]C[MF]C[MF]$/.test(c)){
+  const gen1=mm[p[3].to],pf=gen1.g==='M'?'堂':'表',anc=p[0].to;
+  if(to.g==='M')return el(b,anc)?T(pf+'伯',pf+'-Uncle(E)'):T(pf+'叔',pf+'-Uncle(Y)');
+  return T(pf+'姑',pf+'-Aunt');
+ }
+ // Gen3→Gen2 cross-branch spouse
+ if(/^P[MF]P[MF]P[MF]C[MF]C[MF]S[MF]$/.test(c)){
+  const gen1=mm[p[3].to],gen2=mm[p[4].to],pf=gen1.g==='M'?'堂':'表',anc=p[0].to;
+  if(gen2.g==='M')return el(gen2.id,anc)?T(pf+'伯母',pf+'-Uncle\'s Wife(E)'):T(pf+'嬸',pf+'-Aunt(Y)');
+  return T(pf+'姑丈',pf+'-Aunt\'s Husband');
+ }
+ // Gen2→Gen3 cross-branch: 堂侄/表侄
+ if(/^P[MF]P[MF]C[MF]C[MF]C[MF]$/.test(c)){
+  const gen1=mm[p[0].to],pf=gen1.g==='M'?'堂':'表';
+  return to.g==='M'?T(pf+'侄',pf+'-Nephew'):T(pf+'侄女',pf+'-Niece');
+ }
+ // cousin's spouse
+ if(/^P[MF]P[MF]C[MF]C[MF]S[MF]$/.test(c)){
+  const mid2=mm[p[2].to],tang=c[1]==='M'&&mid2.g==='M',pf=tang?'堂':'表',cuz=mm[p[3].to];
+  if(cuz.g==='F')return el(cuz.id,a)?T(pf+'姐夫',pf+' Cousin\'s H(E)'):T(pf+'妹夫',pf+' Cousin\'s H(Y)');
+  return el(cuz.id,a)?T(pf+'嫂',pf+' Cousin\'s W(E)'):T(pf+'弟媳',pf+' Cousin\'s W(Y)');
+ }
+ // in-law sibling's children
+ if(/^S[MF]P[MF]C[MF]C[MF]$/.test(c)){
+  const sib=mm[p[2].to];
+  if(sib.g==='M')return to.g==='M'?T('侄子','Nephew'):T('侄女','Niece');
+  return to.g==='M'?T('外甥','Nephew'):T('外甥女','Niece');
+ }
+ if(/^S[MF]C[MF]$/.test(c))return to.g==='M'?T('兒子','Son'):T('女兒','Daughter');
+ if(/^S[MF]C[MF]C[MF]$/.test(c))return to.g==='M'?T('孫子','Grandson'):T('孫女','Granddaughter');
+ if(/^C[MF]S[MF]$/.test(c))return to.g==='M'?T('女婿','Son-in-law'):T('媳婦','Daughter-in-law');
+
+ // spouse delegation: use spouse's perspective
+ if(/^S[MF]/.test(c)&&c.length>=4&&!noSp){
+  const r=kin(p[0].to,b,true);
+  if(r.zh!=='親戚')return r;
+ }
+
+ // generation fallback
+ const gd=to.gen-fr.gen;
+ if(gd===-1)return to.g==='M'?T('叔伯輩','Elder(Uncle gen)'):T('姑姨輩','Elder(Aunt gen)');
+ if(gd===1)return to.g==='M'?T('侄輩','Junior(Nephew gen)'):T('侄女輩','Junior(Niece gen)');
+ if(gd===-2)return T('祖輩','Grandparent gen');
+ if(gd===2)return T('孫輩','Grandchild gen');
+ if(gd===0)return T('平輩','Same generation');
+ return T('親戚','Relative');
+}
+
+const branches=[
+ {g1:['fa','mo'],subs:[{p:'ego',sp:'csh',k:['wjy','cpy']},{p:'wyx2',sp:null,k:[]}]},
+ {g1:['dagu','daguh'],subs:[{p:'psw',sp:'psww',k:[]},{p:'psk',sp:'pskw',k:['pk1','pk2']}]},
+ {g1:['ersh','ershw'],subs:[{p:'wzc',sp:'wxw',k:['wmz','wmy','wts']},{p:'wyx',sp:'jay',k:['cc']},{p:'wyw',sp:'michael',k:['mila']},{p:'wyh',sp:'nick',k:['bd','le']}]},
+ {g1:['sansh','sanshw'],subs:[{p:'wyj',sp:'antoine',k:['ali']},{p:'wzg',sp:'winnie',k:['sz','mochi']}]},
+ {g1:['xgu','xguh'],subs:[{p:'lya',sp:'polly',k:[]},{p:'ljy',sp:null,k:[]}]},
+ {g1:['xsh','xshw'],subs:[{p:'wyq',sp:null,k:[]},{p:'wzh',sp:'lmd',k:['mnt']}]},
+];
+
+function mkP(m,cls){
+ const d=document.createElement('div');d.className='p'+(cls?' '+cls:'')+(m.d?' dead':'');d.dataset.id=m.id;
+ d.innerHTML=`<div class="a ${m.g==='M'?'m':'f'}">${m.g==='M'?'👨':'👩'}</div><div class="n">${m.n}</div>${m.e?'<div class="en">'+m.e+'</div>':''}`;
+ d.onclick=()=>click(m.id);return d;
+}
+
+function render(){
+ const r0=document.getElementById('g0'),c0=document.createElement('div');c0.className='cp';
+ c0.appendChild(mkP(mm.gf));c0.appendChild(mkP(mm.gm));r0.appendChild(c0);
+ const r1=document.getElementById('g12');
+ branches.forEach(br=>{
+  const col=document.createElement('div');col.className='branch';
+  const cp=document.createElement('div');cp.className='cp';
+  cp.appendChild(mkP(mm[br.g1[0]]));cp.appendChild(mkP(mm[br.g1[1]]));
+  col.appendChild(cp);
+  const sf=document.createElement('div');sf.className='subfams';
+  br.subs.forEach(sub=>{
+   const f=document.createElement('div');f.className='subfam';
+   const sc=document.createElement('div');sc.className='cp';
+   sc.appendChild(mkP(mm[sub.p]));
+   if(sub.sp)sc.appendChild(mkP(mm[sub.sp]));
+   f.appendChild(sc);
+   if(sub.k.length){
+    const kd=document.createElement('div');kd.className='kids';
+    sub.k.forEach(kid=>kd.appendChild(mkP(mm[kid],'g3')));
+    f.appendChild(kd);
+   }
+   sf.appendChild(f);
+  });
+  col.appendChild(sf);
+  r1.appendChild(col);
+ });
+ requestAnimationFrame(drawLines);
+}
+
+function ctr(id){const e=document.querySelector(`[data-id="${id}"] .a`);if(!e)return null;const s=document.getElementById('L').getBoundingClientRect(),r=e.getBoundingClientRect();return{x:r.left+r.width/2-s.left,y:r.top+r.height/2-s.top}}
+function mid(a,b){const p=ctr(a),q=ctr(b);return p&&q?{x:(p.x+q.x)/2,y:(p.y+q.y)/2}:null}
+
+function drawLines(){
+ const svg=document.getElementById('L'),tree=document.getElementById('tree');
+ svg.setAttribute('width',tree.scrollWidth);svg.setAttribute('height',tree.scrollHeight);svg.innerHTML='';
+ SP.forEach(([a,b])=>{const p=ctr(a),q=ctr(b);if(!p||!q)return;const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1',p.x);l.setAttribute('y1',p.y);l.setAttribute('x2',q.x);l.setAttribute('y2',q.y);svg.appendChild(l)});
+ const gp=mid('gf','gm');
+ if(gp)branches.forEach(br=>{
+  const cp=mid(br.g1[0],br.g1[1]);if(!cp)return;
+  const my=(gp.y+24+cp.y-24)/2;
+  const d=document.createElementNS('http://www.w3.org/2000/svg','path');
+  d.setAttribute('d',`M${gp.x},${gp.y+24}L${gp.x},${my}L${cp.x},${my}L${cp.x},${cp.y-24}`);svg.appendChild(d);
+ });
+ branches.forEach(br=>{
+  const cp1=mid(br.g1[0],br.g1[1]);if(!cp1)return;
+  br.subs.forEach(sub=>{
+   const pt=sub.sp?mid(sub.p,sub.sp):ctr(sub.p);if(!pt)return;
+   const my=(cp1.y+24+pt.y-24)/2;
+   const d=document.createElementNS('http://www.w3.org/2000/svg','path');
+   d.setAttribute('d',`M${cp1.x},${cp1.y+24}L${cp1.x},${my}L${pt.x},${my}L${pt.x},${pt.y-24}`);svg.appendChild(d);
+   sub.k.forEach(kid=>{
+    const kp=ctr(kid);if(!kp)return;
+    const my2=(pt.y+24+kp.y-24)/2;
+    const d2=document.createElementNS('http://www.w3.org/2000/svg','path');
+    d2.setAttribute('d',`M${pt.x},${pt.y+24}L${pt.x},${my2}L${kp.x},${my2}L${kp.x},${kp.y-18}`);svg.appendChild(d2);
+   });
+  });
+ });
+}
+
+let sA=null,sB=null;
+function click(id){
+ if(!sA){sA=id;hi();show(`已選 <span class="badge ba">A</span> <b>${mm[id].n}</b>，請點選 B`);}
+ else if(!sB&&id!==sA){sB=id;hi();showR();}
+ else{sA=id;sB=null;hi();show(`已選 <span class="badge ba">A</span> <b>${mm[id].n}</b>，請點選 B`);}
+ document.getElementById('btn').style.display='block';
+}
+function hi(){
+ document.querySelectorAll('.p').forEach(e=>{e.classList.remove('sa','sb');e.querySelector('.badge')?.remove()});
+ if(sA){const e=document.querySelector(`[data-id="${sA}"]`);e.classList.add('sa');e.insertAdjacentHTML('beforeend','<span class="badge ba">A</span>')}
+ if(sB){const e=document.querySelector(`[data-id="${sB}"]`);e.classList.add('sb');e.insertAdjacentHTML('beforeend','<span class="badge bb">B</span>')}
+}
+function show(h){const b=document.getElementById('rbar');b.style.display='block';b.innerHTML=h}
+function showR(){const k=kin(sA,sB);show(`<span class="badge ba">A</span> ${mm[sA].n} 叫 <span class="badge bb">B</span> ${mm[sB].n}：<span class="zh">${k.zh}</span> <span class="en">(${k.en})</span>`)}
+function reset(){sA=sB=null;hi();document.getElementById('rbar').style.display='none';document.getElementById('btn').style.display='none'}
+
+window.onload=()=>{render();window.onresize=drawLines};
+</script>
+</body>
+</html>
