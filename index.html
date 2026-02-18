@@ -34,6 +34,7 @@ svg#L line{stroke:#e74c3c;stroke-width:1.5;stroke-dasharray:5,3}
 .p.dead::after{content:'✝';position:absolute;top:-2px;right:2px;font-size:10px;color:#999}
 .n{font-size:10px;font-weight:600;color:#2d3436;line-height:1.2;white-space:nowrap}
 .en{font-size:8px;color:#6c757d;line-height:1;white-space:nowrap}
+.zd{font-size:9px;line-height:1;white-space:nowrap}
 .g3 .a{width:34px;height:34px;font-size:13px}
 .g3 .n{font-size:9px}
 .g3 .en{font-size:7px}
@@ -72,14 +73,14 @@ footer{text-align:center;padding:12px;color:#aaa;font-size:10px}
 <script>
 const D=[
 {id:'gf',n:'吳木林',g:'M',gen:0,d:1},{id:'gm',n:'吳賴媛',g:'F',gen:0,d:1},
-{id:'fa',n:'吳仁杰',g:'M',gen:1,d:1},{id:'mo',n:'魏麗真',g:'F',gen:1},
+{id:'fa',n:'吳仁杰',g:'M',gen:1,d:1},{id:'mo',n:'魏麗真',g:'F',gen:1,y:1948},
 {id:'dagu',n:'吳麗雲',g:'F',gen:1,d:1},{id:'daguh',n:'彭斗銘',g:'M',gen:1},
 {id:'ersh',n:'吳仁瑞',g:'M',gen:1},{id:'ershw',n:'林如芳',g:'F',gen:1},
 {id:'sansh',n:'吳仁嘉',g:'M',gen:1},{id:'sanshw',n:'王桂皇',g:'F',gen:1},
 {id:'xgu',n:'吳麗明',g:'F',gen:1,d:1},{id:'xguh',n:'李錫銘',g:'M',gen:1,d:1},
 {id:'xsh',n:'吳仁和',g:'M',gen:1},{id:'xshw',n:'曾曼麗',g:'F',gen:1},
-{id:'ego',n:'吳培彰',e:'Marc',g:'M',gen:2},{id:'csh',n:'陳思樺',e:'Chloe',g:'F',gen:2},
-{id:'wyx2',n:'吳怡萱',e:'Kama',g:'F',gen:2},
+{id:'ego',n:'吳培彰',e:'Marc',g:'M',gen:2,y:1974},{id:'csh',n:'陳思樺',e:'Chloe',g:'F',gen:2,y:1975},
+{id:'wyx2',n:'吳怡萱',e:'Kama',g:'F',gen:2,y:1976},
 {id:'psw',n:'彭松文',e:'Kevin',g:'M',gen:2},{id:'psww',n:'松文嫂',g:'F',gen:2},
 {id:'psk',n:'彭松崑',g:'M',gen:2},{id:'pskw',n:'松崑嫂',g:'F',gen:2},
 {id:'wzc',n:'吳正淳',e:'George',g:'M',gen:2},{id:'wxw',n:'吳曉葳',g:'F',gen:2},
@@ -92,7 +93,7 @@ const D=[
 {id:'ljy',n:'李健毓',e:'Billy',g:'M',gen:2},
 {id:'wyq',n:'吳怡奇',e:'Whithney',g:'F',gen:2},
 {id:'wzh',n:'吳正皓',g:'M',gen:2},{id:'lmd',n:'劉曼蒂',g:'F',gen:2},
-{id:'wjy',n:'吳健宇',e:'Tiger',g:'M',gen:3},{id:'cpy',n:'陳品諺',e:'Leo',g:'M',gen:3},
+{id:'wjy',n:'吳健宇',e:'Tiger',g:'M',gen:3,y:2006},{id:'cpy',n:'陳品諺',e:'Leo',g:'M',gen:3,y:2008},
 {id:'pk1',n:'彭大寶',g:'M',gen:3},{id:'pk2',n:'彭二寶',g:'M',gen:3},
 {id:'wmz',n:'吳明哲',e:'Roger',g:'M',gen:3},{id:'wmy',n:'吳明佑',g:'M',gen:3},{id:'wts',n:'吳亭萱',g:'F',gen:3},
 {id:'cc',n:'CC',g:'M',gen:3},{id:'mila',n:'Mila',g:'F',gen:3},
@@ -280,9 +281,11 @@ const branches=[
  {g1:['xsh','xshw'],subs:[{p:'wyq',sp:null,k:[]},{p:'wzh',sp:'lmd',k:['mnt']}]},
 ];
 
+function zodiac(y){const z=['🐵猴','🐔雞','🐶狗','🐷豬','🐭鼠','🐮牛','🐯虎','🐰兔','🐉龍','🐍蛇','🐴馬','🐑羊'];return z[y%12]}
 function mkP(m,cls){
  const d=document.createElement('div');d.className='p'+(cls?' '+cls:'')+(m.d?' dead':'');d.dataset.id=m.id;
- d.innerHTML=`<div class="a ${m.g==='M'?'m':'f'}">${m.g==='M'?'👨':'👩'}</div><div class="n">${m.n}</div>${m.e?'<div class="en">'+m.e+'</div>':''}`;
+ const zd=m.y?'<div class="zd">'+zodiac(m.y)+'</div>':'';
+ d.innerHTML=`<div class="a ${m.g==='M'?'m':'f'}">${m.g==='M'?'👨':'👩'}</div><div class="n">${m.n}</div>${m.e?'<div class="en">'+m.e+'</div>':''}${zd}`;
  d.onclick=()=>click(m.id);return d;
 }
 
