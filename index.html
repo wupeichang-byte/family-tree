@@ -171,7 +171,8 @@ const TW={
 '侄輩':['姪輩','tit-puè'],'侄女輩':['姪女輩','tit-lú-puè'],
 '祖輩':['祖輩','tsóo-puè'],'孫輩':['孫輩','sun-puè'],'平輩':['平輩','pênn-puè'],
 };
-function speak(txt){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang='nan-TW';u.rate=0.8;const vs=speechSynthesis.getVoices();const v=vs.find(v=>v.lang==='nan-TW')||vs.find(v=>v.lang.startsWith('zh-TW'))||vs.find(v=>v.lang.startsWith('zh'));if(v)u.voice=v;speechSynthesis.speak(u)}
+let twAudio=null;
+function speak(rom){if(twAudio){twAudio.pause();twAudio=null}twAudio=new Audio('https://hapsing.ithuan.tw/bangtsam?taibun='+encodeURIComponent(rom));twAudio.play().catch(()=>{})}
 
 const adj={},mm={};
 D.forEach(m=>{adj[m.id]=[];mm[m.id]=m});
@@ -413,7 +414,7 @@ function showModal(){
  const an=mm[sA].n+(mm[sA].e?' ('+mm[sA].e+')':'');
  const bn=mm[sB].n+(mm[sB].e?' ('+mm[sB].e+')':'');
  const tw=TW[k.zh];
- const twHtml=tw?`<div class="tw-box"><div><div class="tw-term">${tw[0]}</div><div class="tw-rom">${tw[1]}</div></div><button class="play-btn" onclick="speak('${tw[0]}')">🔊</button></div>`:`<div class="tw-box"><div class="tw-term" style="font-size:14px;color:#999">台語資料待補</div></div>`;
+ const twHtml=tw?`<div class="tw-box"><div><div class="tw-term">${tw[0]}</div><div class="tw-rom">${tw[1]}</div></div><button class="play-btn" onclick="speak('${tw[1]}')">🔊</button></div>`:`<div class="tw-box"><div class="tw-term" style="font-size:14px;color:#999">台語資料待補</div></div>`;
  document.getElementById('mdl').innerHTML=`
   <div class="who"><span class="badge ba">A</span> <b>${an}</b> 叫 <span class="badge bb">B</span> <b>${bn}</b></div>
   <div class="main-term">${k.zh}</div>
@@ -426,9 +427,9 @@ function showModal(){
   <button class="close-btn" onclick="closeM()">關閉</button>`;
  document.getElementById('mbg').classList.add('show');
  document.getElementById('sbar').style.display='none';
- if(tw)setTimeout(()=>speak(tw[0]),300);
+ if(tw)setTimeout(()=>speak(tw[1]),300);
 }
-function closeM(e){if(!e||e.target===document.getElementById('mbg')){document.getElementById('mbg').classList.remove('show')}}
+function closeM(e){if(!e||e.target===document.getElementById('mbg')){document.getElementById('mbg').classList.remove('show');if(twAudio){twAudio.pause();twAudio=null}}}
 function reset(){sA=sB=null;hi();document.getElementById('sbar').style.display='none';document.getElementById('btn').style.display='none';document.getElementById('mbg').classList.remove('show')}
 
 window.onload=()=>{render();window.onresize=drawLines};
