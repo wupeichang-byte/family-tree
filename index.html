@@ -287,6 +287,12 @@ function kin(a,b,noSp){
   const gen1=mm[p[0].to],pf=gen1.g==='M'?'堂':'表';
   return to.g==='M'?T(pf+'侄',pf+'-Nephew','Cousin-neveu',pf+'侄'):T(pf+'侄女',pf+'-Niece','Cousine-nièce',pf+'侄女');
  }
+ // Gen3 ↔ Gen3 cross-branch (through Gen0)
+ if(/^P[MF]P[MF]P[MF]C[MF]C[MF]C[MF]$/.test(c)){
+  const gen1=mm[p[3].to],pf=gen1.g==='M'?'堂':'表',e=el(b,a);
+  if(to.g==='M')return e?T(pf+'哥','Cousin(M,E)','Cousin aîné',pf+'大佬'):T(pf+'弟','Cousin(M,Y)','Cousin cadet',pf+'細佬');
+  return e?T(pf+'姐','Cousin(F,E)','Cousine aînée',pf+'家姐'):T(pf+'妹','Cousin(F,Y)','Cousine cadette',pf+'細妹');
+ }
  // cousin's spouse
  if(/^P[MF]P[MF]C[MF]C[MF]S[MF]$/.test(c)){
   const mid2=mm[p[2].to],tang=c[1]==='M'&&mid2.g==='M',pf=tang?'堂':'表',cuz=mm[p[3].to];
