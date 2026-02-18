@@ -56,6 +56,11 @@ footer{text-align:center;padding:12px;color:#aaa;font-size:10px}
 .modal .lang .label{font-size:9px;color:#999;text-transform:uppercase}
 .modal .lang .val{font-size:14px;font-weight:600;color:#2d3436}
 .modal .close-btn{margin-top:16px;background:#6c757d;color:#fff;border:none;padding:8px 28px;border-radius:20px;font-size:13px;cursor:pointer}
+.tw-box{background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-radius:10px;padding:10px 14px;margin:12px 0 4px;display:flex;align-items:center;gap:10px;justify-content:center}
+.tw-term{font-size:22px;font-weight:bold;color:#e65100}.tw-rom{font-size:12px;color:#bf360c;font-style:italic}
+.play-btn{background:#ff6d00;color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(230,81,0,.3);transition:transform .1s}
+.play-btn:hover{transform:scale(1.12)}
+.play-btn:active{transform:scale(.95)}
 /* Status bar for A selection */
 #sbar{background:#e3f2fd;color:#1565c0;padding:8px 16px;text-align:center;font-size:14px;font-weight:bold;display:none;border-bottom:2px solid #42a5f5;position:sticky;top:55px;z-index:99}
 </style>
@@ -63,7 +68,7 @@ footer{text-align:center;padding:12px;color:#aaa;font-size:10px}
 <body>
 <header>
 <h1>吳家四代家族關係圖 — 稱謂查詢</h1>
-<div id="inst">點選 A 再點選 B → 顯示稱謂（中／英／法／粵）</div>
+<div id="inst">點選 A 再點選 B → 顯示稱謂（中／英／法／粵／台語🔊）</div>
 </header>
 <div id="sbar"></div>
 <div id="wrap"><div id="tree"><svg id="L"></svg><div id="g0" class="row r0"></div><div id="g12" class="row"></div></div></div>
@@ -126,6 +131,47 @@ const PC=[
 const SIB={fa:1,dagu:2,ersh:3,sansh:4,xgu:5,xsh:6};
 const AGE={ego:1,wyx2:2,psw:3,psk:4,wzc:5,wyx:6,wyw:7,wyh:8,wyj:9,wzg:10,lya:11,ljy:12,wyq:13,wzh:14,
  csh:1,psww:3,pskw:4,wxw:5,jay:6,michael:7,nick:8,antoine:9,winnie:10,polly:11,lmd:14};
+
+const TW={
+'爸爸':['阿爸','a-pah'],'媽媽':['阿母','a-bú'],'爺爺':['阿公','a-kong'],'奶奶':['阿嬤','a-má'],
+'外公':['外公','guā-kong'],'外婆':['外嬤','guā-má'],'兒子':['囝','kiáⁿ'],'女兒':['查某囝','tsa-bóo-kiáⁿ'],
+'老公':['翁','ang'],'老婆':['某','bóo'],'哥哥':['阿兄','a-hiaⁿ'],'弟弟':['小弟','sió-tī'],
+'姐姐':['阿姊','a-tsí'],'妹妹':['小妹','sió-muē'],'伯父':['阿伯','a-peh'],'叔叔':['阿叔','a-tsik'],
+'姑姑':['阿姑','a-koo'],'舅舅':['阿舅','a-kū'],'阿姨':['阿姨','a-î'],
+'伯母':['阿姆','a-ḿ'],'嬸嬸':['阿嬸','a-tsím'],'姑丈':['姑丈','koo-tiūⁿ'],
+'舅媽':['舅姆','kū-ḿ'],'姨丈':['姨丈','î-tiūⁿ'],
+'堂哥':['堂兄','tông-hiaⁿ'],'堂弟':['堂弟','tông-tī'],'堂姐':['堂姊','tông-tsí'],'堂妹':['堂妹','tông-muē'],
+'表哥':['表兄','piáu-hiaⁿ'],'表弟':['表弟','piáu-tī'],'表姐':['表姊','piáu-tsí'],'表妹':['表妹','piáu-muē'],
+'侄子':['姪仔','tit-á'],'侄女':['姪女','tit-lú'],'外甥':['外甥','guā-sing'],'外甥女':['外甥女','guā-sing-lú'],
+'孫子':['孫仔','sun-á'],'孫女':['孫女','sun-lú'],'媳婦':['新婦','sin-pū'],'女婿':['囝婿','kiáⁿ-sài'],
+'公公':['大官','ta-kuaⁿ'],'婆婆':['大家','ta-ke'],'岳父':['丈人','tiūⁿ-lâng'],'岳母':['丈姆','tiūⁿ-ḿ'],
+'嫂嫂':['阿嫂','a-só'],'弟媳':['弟婦','tē-hū'],'姐夫':['姊夫','tsí-hu'],'妹夫':['妹婿','muē-sài'],
+'曾祖父':['阿祖','a-tsóo'],'曾祖母':['阿祖媽','a-tsóo-má'],
+'外曾祖父':['外阿祖','guā-a-tsóo'],'外曾祖母':['外阿祖媽','guā-a-tsóo-má'],
+'曾孫':['曾孫','tsing-sun'],'曾孫女':['曾孫女','tsing-sun-lú'],
+'外曾孫':['外曾孫','guā-tsing-sun'],'外曾孫女':['外曾孫女','guā-tsing-sun-lú'],
+'伯公':['伯公','peh-kong'],'叔公':['叔公','tsik-kong'],'姑婆':['姑婆','koo-pô'],
+'伯婆':['伯婆','peh-pô'],'嬸婆':['嬸婆','tsím-pô'],'姑丈公':['姑丈公','koo-tiūⁿ-kong'],
+'侄孫':['姪孫','tit-sun'],'侄孫女':['姪孫女','tit-sun-lú'],
+'外甥孫':['外甥孫','guā-sing-sun'],'外甥孫女':['外甥孫女','guā-sing-sun-lú'],
+'大伯':['大伯','tuā-peh'],'小叔':['小叔','sió-tsik'],'姑子':['姑仔','koo-á'],
+'舅子':['舅仔','kū-á'],'大姨子':['大姨','tuā-î'],'小姨子':['小姨','sió-î'],
+'堂伯':['堂伯','tông-peh'],'堂叔':['堂叔','tông-tsik'],'堂姑':['堂姑','tông-koo'],
+'表伯':['表伯','piáu-peh'],'表叔':['表叔','piáu-tsik'],'表姑':['表姑','piáu-koo'],
+'堂侄':['堂姪','tông-tit'],'堂侄女':['堂姪女','tông-tit-lú'],
+'表侄':['表姪','piáu-tit'],'表侄女':['表姪女','piáu-tit-lú'],
+'堂伯母':['堂姆','tông-ḿ'],'堂嬸':['堂嬸','tông-tsím'],'堂姑丈':['堂姑丈','tông-koo-tiūⁿ'],
+'表伯母':['表姆','piáu-ḿ'],'表嬸':['表嬸','piáu-tsím'],'表姑丈':['表姑丈','piáu-koo-tiūⁿ'],
+'堂姐夫':['堂姊夫','tông-tsí-hu'],'堂妹夫':['堂妹婿','tông-muē-sài'],
+'堂嫂':['堂嫂','tông-só'],'堂弟媳':['堂弟婦','tông-tē-hū'],
+'表姐夫':['表姊夫','piáu-tsí-hu'],'表妹夫':['表妹婿','piáu-muē-sài'],
+'表嫂':['表嫂','piáu-só'],'表弟媳':['表弟婦','piáu-tē-hū'],
+'自己':['家己','ka-kī'],'無關係':['無關係','bô-kuan-hē'],'親戚':['親情','tshin-tsiâⁿ'],
+'叔伯輩':['叔伯輩','tsik-peh-puè'],'姑姨輩':['姑姨輩','koo-î-puè'],
+'侄輩':['姪輩','tit-puè'],'侄女輩':['姪女輩','tit-lú-puè'],
+'祖輩':['祖輩','tsóo-puè'],'孫輩':['孫輩','sun-puè'],'平輩':['平輩','pênn-puè'],
+};
+function speak(txt){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang='nan-TW';u.rate=0.8;const vs=speechSynthesis.getVoices();const v=vs.find(v=>v.lang==='nan-TW')||vs.find(v=>v.lang.startsWith('zh-TW'))||vs.find(v=>v.lang.startsWith('zh'));if(v)u.voice=v;speechSynthesis.speak(u)}
 
 const adj={},mm={};
 D.forEach(m=>{adj[m.id]=[];mm[m.id]=m});
@@ -366,9 +412,12 @@ function showModal(){
  const k=kin(sA,sB);
  const an=mm[sA].n+(mm[sA].e?' ('+mm[sA].e+')':'');
  const bn=mm[sB].n+(mm[sB].e?' ('+mm[sB].e+')':'');
+ const tw=TW[k.zh];
+ const twHtml=tw?`<div class="tw-box"><div><div class="tw-term">${tw[0]}</div><div class="tw-rom">${tw[1]}</div></div><button class="play-btn" onclick="speak('${tw[0]}')">🔊</button></div>`:`<div class="tw-box"><div class="tw-term" style="font-size:14px;color:#999">台語資料待補</div></div>`;
  document.getElementById('mdl').innerHTML=`
   <div class="who"><span class="badge ba">A</span> <b>${an}</b> 叫 <span class="badge bb">B</span> <b>${bn}</b></div>
   <div class="main-term">${k.zh}</div>
+  ${twHtml}
   <div class="lang-row">
    <div class="lang"><div class="label">English</div><div class="val">${k.en}</div></div>
    <div class="lang"><div class="label">Français</div><div class="val">${k.fr}</div></div>
@@ -377,6 +426,7 @@ function showModal(){
   <button class="close-btn" onclick="closeM()">關閉</button>`;
  document.getElementById('mbg').classList.add('show');
  document.getElementById('sbar').style.display='none';
+ if(tw)setTimeout(()=>speak(tw[0]),300);
 }
 function closeM(e){if(!e||e.target===document.getElementById('mbg')){document.getElementById('mbg').classList.remove('show')}}
 function reset(){sA=sB=null;hi();document.getElementById('sbar').style.display='none';document.getElementById('btn').style.display='none';document.getElementById('mbg').classList.remove('show')}
