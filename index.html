@@ -186,7 +186,7 @@ function bfs(a,b){
  return null;
 }
 function ch(p){return p.map(s=>(s.t==='p'?'P':s.t==='c'?'C':'S')+mm[s.to].g).join('')}
-function el(a,b){return(AGE[a]??SIB[a]??99)<(AGE[b]??SIB[b]??99)}
+function el(a,b){const aa=AGE[a]??SIB[a],bb=AGE[b]??SIB[b];if(aa!=null&&bb!=null)return aa<bb;const ya=mm[a]?.y,yb=mm[b]?.y;if(ya&&yb)return ya<yb;return aa!=null?aa<99:false}
 function T(z,en,fr,ct){return{zh:z,en:en,fr:fr||'',ct:ct||''}}
 
 function kin(a,b,noSp){
