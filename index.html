@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0">
 <title>吳家家族稱謂查詢</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -10,11 +10,8 @@ body{font-family:'Microsoft JhengHei','PingFang TC',sans-serif;background:#f0f4f
 header{background:linear-gradient(135deg,#2c3e50,#3498db);color:#fff;text-align:center;padding:16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.2)}
 header h1{font-size:20px;margin-bottom:3px}
 #inst{font-size:12px;opacity:.9}
-#rbar{background:#fff3cd;color:#856404;padding:10px 16px;text-align:center;font-size:15px;font-weight:bold;display:none;border-bottom:2px solid #ffc107;position:sticky;top:55px;z-index:99}
-#rbar .zh{font-size:28px;color:#d63384}
-#rbar .en{font-size:14px;color:#6c757d;font-weight:normal}
-#wrap{overflow:auto;padding:20px 10px 50px}
-#tree{position:relative;margin:0 auto}
+#wrap{overflow-x:auto;overflow-y:visible;padding:20px 10px 50px;-webkit-overflow-scrolling:touch}
+#tree{position:relative;display:inline-block;min-width:100%}
 svg#L{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
 svg#L path{fill:none;stroke:#bbb;stroke-width:1.5}
 svg#L line{stroke:#e74c3c;stroke-width:1.5;stroke-dasharray:5,3}
@@ -39,21 +36,38 @@ svg#L line{stroke:#e74c3c;stroke-width:1.5;stroke-dasharray:5,3}
 .en{font-size:8px;color:#6c757d;line-height:1;white-space:nowrap}
 .g3 .a{width:34px;height:34px;font-size:13px}
 .g3 .n{font-size:9px}
+.g3 .en{font-size:7px}
 .g3{width:48px}
 .badge{display:inline-block;padding:0 4px;border-radius:6px;font-size:8px;font-weight:bold;color:#fff;margin-top:1px}
 .ba{background:#0d6efd}.bb{background:#dc3545}
 #btn{position:fixed;bottom:14px;right:14px;background:#6c757d;color:#fff;border:none;padding:7px 16px;border-radius:18px;cursor:pointer;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.2);display:none;z-index:200}
 footer{text-align:center;padding:12px;color:#aaa;font-size:10px}
+/* Modal */
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:16px;padding:24px 20px;max-width:340px;width:90%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3);animation:popIn .2s ease}
+@keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.modal .who{font-size:13px;color:#555;margin-bottom:12px}
+.modal .who b{color:#2d3436}
+.modal .main-term{font-size:36px;font-weight:bold;color:#d63384;margin:8px 0}
+.modal .lang-row{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:10px}
+.modal .lang{background:#f8f9fa;border-radius:8px;padding:6px 12px;min-width:70px}
+.modal .lang .label{font-size:9px;color:#999;text-transform:uppercase}
+.modal .lang .val{font-size:14px;font-weight:600;color:#2d3436}
+.modal .close-btn{margin-top:16px;background:#6c757d;color:#fff;border:none;padding:8px 28px;border-radius:20px;font-size:13px;cursor:pointer}
+/* Status bar for A selection */
+#sbar{background:#e3f2fd;color:#1565c0;padding:8px 16px;text-align:center;font-size:14px;font-weight:bold;display:none;border-bottom:2px solid #42a5f5;position:sticky;top:55px;z-index:99}
 </style>
 </head>
 <body>
 <header>
 <h1>吳家四代家族關係圖 — 稱謂查詢</h1>
-<div id="inst">點選 A 再點選 B → 顯示 A 叫 B 什麼（中英對照）</div>
+<div id="inst">點選 A 再點選 B → 顯示稱謂（中／英／法／粵）</div>
 </header>
-<div id="rbar"></div>
+<div id="sbar"></div>
 <div id="wrap"><div id="tree"><svg id="L"></svg><div id="g0" class="row r0"></div><div id="g12" class="row"></div></div></div>
 <button id="btn" onclick="reset()">清除</button>
+<div class="modal-bg" id="mbg" onclick="closeM(event)"><div class="modal" id="mdl"></div></div>
 <footer>吳家四代家族稱謂查詢系統</footer>
 <script>
 const D=[
@@ -125,121 +139,123 @@ function bfs(a,b){
 }
 function ch(p){return p.map(s=>(s.t==='p'?'P':s.t==='c'?'C':'S')+mm[s.to].g).join('')}
 function el(a,b){return(AGE[a]??SIB[a]??99)<(AGE[b]??SIB[b]??99)}
-function T(z,e){return{zh:z,en:e}}
+function T(z,en,fr,ct){return{zh:z,en:en,fr:fr||'',ct:ct||''}}
 
 function kin(a,b,noSp){
- if(a===b)return T('自己','Self');
- const p=bfs(a,b);if(!p)return T('無關係','No relation');
+ if(a===b)return T('自己','Self','Soi-même','自己');
+ const p=bfs(a,b);if(!p)return T('無關係','No relation','Aucun lien','冇關係');
  const c=ch(p),to=mm[b],fr=mm[a];
- const S={PM:['爸爸','Father'],PF:['媽媽','Mother'],CM:['兒子','Son'],CF:['女兒','Daughter'],
-  SM:['老公','Husband'],SF:['老婆','Wife'],
-  PMPM:['爺爺','Paternal Grandfather'],PMPF:['奶奶','Paternal Grandmother'],
-  PFPM:['外公','Maternal Grandfather'],PFPF:['外婆','Maternal Grandmother'],
-  CMCM:['孫子','Grandson'],CMCF:['孫女','Granddaughter'],CFCM:['外孫','Grandson(D)'],CFCF:['外孫女','Granddaughter(D)'],
-  CMSF:['媳婦','Daughter-in-law'],CFSM:['女婿','Son-in-law'],
-  SMPM:['公公','Father-in-law'],SMPF:['婆婆','Mother-in-law'],SFPM:['岳父','Father-in-law'],SFPF:['岳母','Mother-in-law'],
-  PMPMPM:['曾祖父','Great-Grandfather'],PMPMPF:['曾祖母','Great-Grandmother'],
-  PMPFPM:['外曾祖父','Great-Grandfather(M)'],PMPFPF:['外曾祖母','Great-Grandmother(M)'],
-  CMCMCM:['曾孫','Great-Grandson'],CMCMCF:['曾孫女','Great-Granddaughter'],
-  CMCFCM:['外曾孫','Great-Grandson(D)'],CMCFCF:['外曾孫女','Great-Granddaughter(D)'],
-  CFCMCM:['外曾孫','Great-Grandson(D)'],CFCMCF:['外曾孫女','Great-Granddaughter(D)'],
-  CFCFCM:['外曾孫','Great-Grandson(D)'],CFCFCF:['外曾孫女','Great-Granddaughter(D)'],
+ const S={
+  PM:['爸爸','Father','Père','老竇/爸爸'],PF:['媽媽','Mother','Mère','老母/媽咪'],
+  CM:['兒子','Son','Fils','仔'],CF:['女兒','Daughter','Fille','女'],
+  SM:['老公','Husband','Mari','老公'],SF:['老婆','Wife','Femme','老婆'],
+  PMPM:['爺爺','Grandfather','Grand-père paternel','阿爺'],PMPF:['奶奶','Grandmother','Grand-mère paternelle','嫲嫲'],
+  PFPM:['外公','Grandfather(M)','Grand-père maternel','公公'],PFPF:['外婆','Grandmother(M)','Grand-mère maternelle','婆婆'],
+  CMCM:['孫子','Grandson','Petit-fils','孫'],CMCF:['孫女','Granddaughter','Petite-fille','孫女'],
+  CFCM:['外孫','Grandson(D)','Petit-fils(fille)','外孫'],CFCF:['外孫女','Granddaughter(D)','Petite-fille(fille)','外孫女'],
+  CMSF:['媳婦','Daughter-in-law','Belle-fille','新抱'],CFSM:['女婿','Son-in-law','Gendre','女婿'],
+  SMPM:['公公','Father-in-law','Beau-père','老爺'],SMPF:['婆婆','Mother-in-law','Belle-mère','奶奶'],
+  SFPM:['岳父','Father-in-law','Beau-père','外父'],SFPF:['岳母','Mother-in-law','Belle-mère','外母'],
+  PMPMPM:['曾祖父','Great-Grandfather','Arrière-grand-père','太公'],PMPMPF:['曾祖母','Great-Grandmother','Arrière-grand-mère','太婆'],
+  PMPFPM:['外曾祖父','Great-Grandfather(M)','Arrière-grand-père(M)','太公(外)'],PMPFPF:['外曾祖母','Great-Grandmother(M)','Arrière-grand-mère(M)','太婆(外)'],
+  CMCMCM:['曾孫','Great-Grandson','Arrière-petit-fils','曾孫'],CMCMCF:['曾孫女','Great-Granddaughter','Arrière-petite-fille','曾孫女'],
+  CMCFCM:['外曾孫','Great-Grandson(D)','Arrière-petit-fils(D)','外曾孫'],CMCFCF:['外曾孫女','Great-Granddaughter(D)','Arrière-petite-fille(D)','外曾孫女'],
+  CFCMCM:['外曾孫','Great-Grandson(D)','Arrière-petit-fils(D)','外曾孫'],CFCMCF:['外曾孫女','Great-Granddaughter(D)','Arrière-petite-fille(D)','外曾孫女'],
+  CFCFCM:['外曾孫','Great-Grandson(D)','Arrière-petit-fils(D)','外曾孫'],CFCFCF:['外曾孫女','Great-Granddaughter(D)','Arrière-petite-fille(D)','外曾孫女'],
  };
- if(S[c])return T(S[c][0],S[c][1]);
+ if(S[c])return T(S[c][0],S[c][1],S[c][2],S[c][3]);
 
  // siblings
  if(/^P[MF]C[MF]$/.test(c)){
-  return to.g==='M'?(el(b,a)?T('哥哥','Elder Brother'):T('弟弟','Younger Brother')):(el(b,a)?T('姐姐','Elder Sister'):T('妹妹','Younger Sister'));
+  if(to.g==='M')return el(b,a)?T('哥哥','Elder Brother','Frère aîné','大佬/阿哥'):T('弟弟','Younger Brother','Petit frère','細佬');
+  return el(b,a)?T('姐姐','Elder Sister','Grande sœur','家姐'):T('妹妹','Younger Sister','Petite sœur','細妹');
  }
- // uncle/aunt (parent's sibling)
+ // uncle/aunt
  if(/^P[MF]P[MF]C[MF]$/.test(c)){
   const pat=c[1]==='M';
-  if(pat){if(to.g==='M')return el(b,p[0].to)?T('伯父','Uncle(Elder)'):T('叔叔','Uncle(Younger)');return T('姑姑','Paternal Aunt');}
-  return to.g==='M'?T('舅舅','Maternal Uncle'):T('阿姨','Maternal Aunt');
+  if(pat){if(to.g==='M')return el(b,p[0].to)?T('伯父','Uncle(Elder)','Oncle paternel aîné','伯父'):T('叔叔','Uncle(Younger)','Oncle paternel cadet','叔叔');return T('姑姑','Paternal Aunt','Tante paternelle','姑媽');}
+  return to.g==='M'?T('舅舅','Maternal Uncle','Oncle maternel','舅父'):T('阿姨','Maternal Aunt','Tante maternelle','阿姨');
  }
  // uncle/aunt's spouse
  if(/^P[MF]P[MF]C[MF]S[MF]$/.test(c)){
   const pat=c[1]==='M',sib=mm[p[2].to];
-  if(pat){if(sib.g==='M')return el(sib.id,p[0].to)?T('伯母','Uncle\'s Wife(E)'):T('嬸嬸','Uncle\'s Wife(Y)');return T('姑丈','Aunt\'s Husband');}
-  return sib.g==='M'?T('舅媽','Uncle\'s Wife(M)'):T('姨丈','Aunt\'s Husband(M)');
+  if(pat){if(sib.g==='M')return el(sib.id,p[0].to)?T('伯母','Uncle\'s Wife(E)','Tante(oncle aîné)','伯娘'):T('嬸嬸','Uncle\'s Wife(Y)','Tante(oncle cadet)','嬸嬸');return T('姑丈','Aunt\'s Husband','Oncle(mari tante)','姑丈');}
+  return sib.g==='M'?T('舅媽','Uncle\'s Wife(M)','Tante(oncle M)','舅母'):T('姨丈','Aunt\'s Husband(M)','Oncle(mari tante M)','姨丈');
  }
  // cousins
  if(/^P[MF]P[MF]C[MF]C[MF]$/.test(c)){
   const pat=c[1]==='M',mid=mm[p[2].to],tang=pat&&mid.g==='M',e=el(b,a),pf=tang?'堂':'表';
-  return to.g==='M'?(e?T(pf+'哥',pf+' Cousin(M,E)'):T(pf+'弟',pf+' Cousin(M,Y)')):(e?T(pf+'姐',pf+' Cousin(F,E)'):T(pf+'妹',pf+' Cousin(F,Y)'));
+  if(to.g==='M')return e?T(pf+'哥','Cousin(M,E)','Cousin aîné',pf+'大佬'):T(pf+'弟','Cousin(M,Y)','Cousin cadet',pf+'細佬');
+  return e?T(pf+'姐','Cousin(F,E)','Cousine aînée',pf+'家姐'):T(pf+'妹','Cousin(F,Y)','Cousine cadette',pf+'細妹');
  }
- // nephew/niece (sibling's child)
+ // nephew/niece
  if(/^P[MF]C[MF]C[MF]$/.test(c)){
   const sib=mm[p[1].to];
-  if(sib.g==='M')return to.g==='M'?T('侄子','Nephew(B)'):T('侄女','Niece(B)');
-  return to.g==='M'?T('外甥','Nephew(S)'):T('外甥女','Niece(S)');
+  if(sib.g==='M')return to.g==='M'?T('侄子','Nephew(B)','Neveu','侄仔'):T('侄女','Niece(B)','Nièce','侄女');
+  return to.g==='M'?T('外甥','Nephew(S)','Neveu(sœur)','外甥'):T('外甥女','Niece(S)','Nièce(sœur)','外甥女');
  }
  // sibling's spouse
  if(/^P[MF]C[MF]S[MF]$/.test(c)){
   const sib=mm[p[1].to],e=el(sib.id,a);
-  if(sib.g==='M')return e?T('嫂嫂','Elder Bro\'s Wife'):T('弟媳','Younger Bro\'s Wife');
-  return e?T('姐夫','Elder Sis\'s Husband'):T('妹夫','Younger Sis\'s Husband');
+  if(sib.g==='M')return e?T('嫂嫂','Elder Bro\'s Wife','Belle-sœur(frère aîné)','阿嫂'):T('弟媳','Younger Bro\'s Wife','Belle-sœur(frère cadet)','弟婦');
+  return e?T('姐夫','Elder Sis\'s Husband','Beau-frère(sœur aînée)','姐夫'):T('妹夫','Younger Sis\'s Husband','Beau-frère(sœur cadette)','妹夫');
  }
  // spouse's sibling
  if(/^S[MF]P[MF]C[MF]$/.test(c)){
   const sp=mm[p[0].to];
-  if(sp.g==='M'){return to.g==='M'?(el(b,sp.id)?T('大伯','H\'s Elder Bro'):T('小叔','H\'s Younger Bro')):T('大姑/小姑','H\'s Sister');}
-  return to.g==='M'?T('舅子','W\'s Brother'):(el(b,sp.id)?T('大姨子','W\'s Elder Sis'):T('小姨子','W\'s Younger Sis'));
+  if(sp.g==='M'){return to.g==='M'?(el(b,sp.id)?T('大伯','H\'s Elder Bro','Beau-frère aîné','大伯'):T('小叔','H\'s Younger Bro','Beau-frère cadet','叔仔')):T('姑子','H\'s Sister','Belle-sœur','姑奶');}
+  return to.g==='M'?T('舅子','W\'s Brother','Beau-frère','舅仔'):(el(b,sp.id)?T('大姨子','W\'s Elder Sis','Belle-sœur aînée','大姨'):T('小姨子','W\'s Younger Sis','Belle-sœur cadette','細姨'));
  }
 
- // === Gen3 ↔ Gen1: 叔公/伯公/姑婆 ===
+ // === Gen3 ↔ Gen1 ===
  if(/^P[MF]P[MF]P[MF]C[MF]$/.test(c)){
   const anc=p[1].to;
-  if(to.g==='M')return el(b,anc)?T('伯公','Grand-Uncle(E)'):T('叔公','Grand-Uncle(Y)');
-  return T('姑婆','Grand-Aunt');
+  if(to.g==='M')return el(b,anc)?T('伯公','Grand-Uncle(E)','Grand-oncle aîné','伯公'):T('叔公','Grand-Uncle(Y)','Grand-oncle cadet','叔公');
+  return T('姑婆','Grand-Aunt','Grand-tante','姑婆');
  }
- // Gen3→Gen1 spouse: 嬸婆/伯婆/姑丈公
  if(/^P[MF]P[MF]P[MF]C[MF]S[MF]$/.test(c)){
   const sib=mm[p[3].to],anc=p[1].to;
-  if(sib.g==='M')return el(sib.id,anc)?T('伯婆','Grand-Uncle\'s Wife(E)'):T('嬸婆','Grand-Uncle\'s Wife(Y)');
-  return T('姑丈公','Grand-Aunt\'s Husband');
+  if(sib.g==='M')return el(sib.id,anc)?T('伯婆','Grand-Uncle\'s Wife(E)','Gd-tante(oncle aîné)','伯婆'):T('嬸婆','Grand-Uncle\'s Wife(Y)','Gd-tante(oncle cadet)','嬸婆');
+  return T('姑丈公','Grand-Aunt\'s Husband','Grand-oncle(mari)','姑丈公');
  }
- // Gen1→Gen3 non-direct: 侄孫
  if(/^P[MF]C[MF]C[MF]C[MF]$/.test(c)){
   const sib=mm[p[1].to];
-  if(sib.g==='M')return to.g==='M'?T('侄孫','Grand-Nephew(B)'):T('侄孫女','Grand-Niece(B)');
-  return to.g==='M'?T('外甥孫','Grand-Nephew(S)'):T('外甥孫女','Grand-Niece(S)');
+  if(sib.g==='M')return to.g==='M'?T('侄孫','Grand-Nephew(B)','Petit-neveu','侄孫'):T('侄孫女','Grand-Niece(B)','Petite-nièce','侄孫女');
+  return to.g==='M'?T('外甥孫','Grand-Nephew(S)','Petit-neveu(S)','外甥孫'):T('外甥孫女','Grand-Niece(S)','Petite-nièce(S)','外甥孫女');
  }
 
- // === Gen3 ↔ Gen2 cross-branch: 堂伯/堂叔/表叔 ===
+ // === Gen3 ↔ Gen2 cross-branch ===
  if(/^P[MF]P[MF]P[MF]C[MF]C[MF]$/.test(c)){
   const gen1=mm[p[3].to],pf=gen1.g==='M'?'堂':'表',anc=p[0].to;
-  if(to.g==='M')return el(b,anc)?T(pf+'伯',pf+'-Uncle(E)'):T(pf+'叔',pf+'-Uncle(Y)');
-  return T(pf+'姑',pf+'-Aunt');
+  if(to.g==='M')return el(b,anc)?T(pf+'伯',pf+'-Uncle(E)',pf==='堂'?'Cousin-oncle aîné':'Cousin-oncle aîné(M)',pf+'伯'):T(pf+'叔',pf+'-Uncle(Y)',pf==='堂'?'Cousin-oncle cadet':'Cousin-oncle cadet(M)',pf+'叔');
+  return T(pf+'姑',pf+'-Aunt',pf==='堂'?'Cousine-tante':'Cousine-tante(M)',pf+'姑');
  }
- // Gen3→Gen2 cross-branch spouse
  if(/^P[MF]P[MF]P[MF]C[MF]C[MF]S[MF]$/.test(c)){
   const gen1=mm[p[3].to],gen2=mm[p[4].to],pf=gen1.g==='M'?'堂':'表',anc=p[0].to;
-  if(gen2.g==='M')return el(gen2.id,anc)?T(pf+'伯母',pf+'-Uncle\'s Wife(E)'):T(pf+'嬸',pf+'-Aunt(Y)');
-  return T(pf+'姑丈',pf+'-Aunt\'s Husband');
+  if(gen2.g==='M')return el(gen2.id,anc)?T(pf+'伯母',pf+'-Uncle\'s Wife(E)','Tante(cousin-oncle)',pf+'伯娘'):T(pf+'嬸',pf+'-Uncle\'s Wife(Y)','Tante(cousin-oncle)',pf+'嬸');
+  return T(pf+'姑丈',pf+'-Aunt\'s Husband','Oncle(cousine-tante)',pf+'姑丈');
  }
- // Gen2→Gen3 cross-branch: 堂侄/表侄
  if(/^P[MF]P[MF]C[MF]C[MF]C[MF]$/.test(c)){
   const gen1=mm[p[0].to],pf=gen1.g==='M'?'堂':'表';
-  return to.g==='M'?T(pf+'侄',pf+'-Nephew'):T(pf+'侄女',pf+'-Niece');
+  return to.g==='M'?T(pf+'侄',pf+'-Nephew','Cousin-neveu',pf+'侄'):T(pf+'侄女',pf+'-Niece','Cousine-nièce',pf+'侄女');
  }
  // cousin's spouse
  if(/^P[MF]P[MF]C[MF]C[MF]S[MF]$/.test(c)){
   const mid2=mm[p[2].to],tang=c[1]==='M'&&mid2.g==='M',pf=tang?'堂':'表',cuz=mm[p[3].to];
-  if(cuz.g==='F')return el(cuz.id,a)?T(pf+'姐夫',pf+' Cousin\'s H(E)'):T(pf+'妹夫',pf+' Cousin\'s H(Y)');
-  return el(cuz.id,a)?T(pf+'嫂',pf+' Cousin\'s W(E)'):T(pf+'弟媳',pf+' Cousin\'s W(Y)');
+  if(cuz.g==='F')return el(cuz.id,a)?T(pf+'姐夫','Cousin\'s H(E)','Beau-cousin',pf+'姐夫'):T(pf+'妹夫','Cousin\'s H(Y)','Beau-cousin',pf+'妹夫');
+  return el(cuz.id,a)?T(pf+'嫂','Cousin\'s W(E)','Belle-cousine',pf+'嫂'):T(pf+'弟媳','Cousin\'s W(Y)','Belle-cousine',pf+'弟婦');
  }
  // in-law sibling's children
  if(/^S[MF]P[MF]C[MF]C[MF]$/.test(c)){
   const sib=mm[p[2].to];
-  if(sib.g==='M')return to.g==='M'?T('侄子','Nephew'):T('侄女','Niece');
-  return to.g==='M'?T('外甥','Nephew'):T('外甥女','Niece');
+  if(sib.g==='M')return to.g==='M'?T('侄子','Nephew','Neveu','侄仔'):T('侄女','Niece','Nièce','侄女');
+  return to.g==='M'?T('外甥','Nephew','Neveu','外甥'):T('外甥女','Niece','Nièce','外甥女');
  }
- if(/^S[MF]C[MF]$/.test(c))return to.g==='M'?T('兒子','Son'):T('女兒','Daughter');
- if(/^S[MF]C[MF]C[MF]$/.test(c))return to.g==='M'?T('孫子','Grandson'):T('孫女','Granddaughter');
- if(/^C[MF]S[MF]$/.test(c))return to.g==='M'?T('女婿','Son-in-law'):T('媳婦','Daughter-in-law');
+ if(/^S[MF]C[MF]$/.test(c))return to.g==='M'?T('兒子','Son','Fils','仔'):T('女兒','Daughter','Fille','女');
+ if(/^S[MF]C[MF]C[MF]$/.test(c))return to.g==='M'?T('孫子','Grandson','Petit-fils','孫'):T('孫女','Granddaughter','Petite-fille','孫女');
+ if(/^C[MF]S[MF]$/.test(c))return to.g==='M'?T('女婿','Son-in-law','Gendre','女婿'):T('媳婦','Daughter-in-law','Belle-fille','新抱');
 
- // spouse delegation: use spouse's perspective
+ // spouse delegation
  if(/^S[MF]/.test(c)&&c.length>=4&&!noSp){
   const r=kin(p[0].to,b,true);
   if(r.zh!=='親戚')return r;
@@ -247,12 +263,12 @@ function kin(a,b,noSp){
 
  // generation fallback
  const gd=to.gen-fr.gen;
- if(gd===-1)return to.g==='M'?T('叔伯輩','Elder(Uncle gen)'):T('姑姨輩','Elder(Aunt gen)');
- if(gd===1)return to.g==='M'?T('侄輩','Junior(Nephew gen)'):T('侄女輩','Junior(Niece gen)');
- if(gd===-2)return T('祖輩','Grandparent gen');
- if(gd===2)return T('孫輩','Grandchild gen');
- if(gd===0)return T('平輩','Same generation');
- return T('親戚','Relative');
+ if(gd===-1)return to.g==='M'?T('叔伯輩','Elder(Uncle gen)','Oncle(gén.)','叔伯輩'):T('姑姨輩','Elder(Aunt gen)','Tante(gén.)','姑姨輩');
+ if(gd===1)return to.g==='M'?T('侄輩','Junior(Nephew gen)','Neveu(gén.)','侄輩'):T('侄女輩','Junior(Niece gen)','Nièce(gén.)','侄女輩');
+ if(gd===-2)return T('祖輩','Grandparent gen','Grands-parents(gén.)','祖輩');
+ if(gd===2)return T('孫輩','Grandchild gen','Petits-enfants(gén.)','孫輩');
+ if(gd===0)return T('平輩','Same generation','Même génération','平輩');
+ return T('親戚','Relative','Parent','親戚');
 }
 
 const branches=[
@@ -332,9 +348,9 @@ function drawLines(){
 
 let sA=null,sB=null;
 function click(id){
- if(!sA){sA=id;hi();show(`已選 <span class="badge ba">A</span> <b>${mm[id].n}</b>，請點選 B`);}
- else if(!sB&&id!==sA){sB=id;hi();showR();}
- else{sA=id;sB=null;hi();show(`已選 <span class="badge ba">A</span> <b>${mm[id].n}</b>，請點選 B`);}
+ if(!sA){sA=id;hi();showSbar(`已選 <span class="badge ba">A</span> <b>${mm[id].n}</b>，請點選 B`);}
+ else if(!sB&&id!==sA){sB=id;hi();showModal();}
+ else{sA=id;sB=null;hi();showSbar(`已選 <span class="badge ba">A</span> <b>${mm[id].n}</b>，請點選 B`);}
  document.getElementById('btn').style.display='block';
 }
 function hi(){
@@ -342,9 +358,25 @@ function hi(){
  if(sA){const e=document.querySelector(`[data-id="${sA}"]`);e.classList.add('sa');e.insertAdjacentHTML('beforeend','<span class="badge ba">A</span>')}
  if(sB){const e=document.querySelector(`[data-id="${sB}"]`);e.classList.add('sb');e.insertAdjacentHTML('beforeend','<span class="badge bb">B</span>')}
 }
-function show(h){const b=document.getElementById('rbar');b.style.display='block';b.innerHTML=h}
-function showR(){const k=kin(sA,sB);show(`<span class="badge ba">A</span> ${mm[sA].n} 叫 <span class="badge bb">B</span> ${mm[sB].n}：<span class="zh">${k.zh}</span> <span class="en">(${k.en})</span>`)}
-function reset(){sA=sB=null;hi();document.getElementById('rbar').style.display='none';document.getElementById('btn').style.display='none'}
+function showSbar(h){const b=document.getElementById('sbar');b.style.display='block';b.innerHTML=h}
+function showModal(){
+ const k=kin(sA,sB);
+ const an=mm[sA].n+(mm[sA].e?' ('+mm[sA].e+')':'');
+ const bn=mm[sB].n+(mm[sB].e?' ('+mm[sB].e+')':'');
+ document.getElementById('mdl').innerHTML=`
+  <div class="who"><span class="badge ba">A</span> <b>${an}</b> 叫 <span class="badge bb">B</span> <b>${bn}</b></div>
+  <div class="main-term">${k.zh}</div>
+  <div class="lang-row">
+   <div class="lang"><div class="label">English</div><div class="val">${k.en}</div></div>
+   <div class="lang"><div class="label">Français</div><div class="val">${k.fr}</div></div>
+   <div class="lang"><div class="label">粵語</div><div class="val">${k.ct}</div></div>
+  </div>
+  <button class="close-btn" onclick="closeM()">關閉</button>`;
+ document.getElementById('mbg').classList.add('show');
+ document.getElementById('sbar').style.display='none';
+}
+function closeM(e){if(!e||e.target===document.getElementById('mbg')){document.getElementById('mbg').classList.remove('show')}}
+function reset(){sA=sB=null;hi();document.getElementById('sbar').style.display='none';document.getElementById('btn').style.display='none';document.getElementById('mbg').classList.remove('show')}
 
 window.onload=()=>{render();window.onresize=drawLines};
 </script>
